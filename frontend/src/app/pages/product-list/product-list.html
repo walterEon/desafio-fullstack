@@ -1,0 +1,49 @@
+<header class="topbar">
+  <h1>Productos</h1>
+  <button type="button" class="btn btn-secondary" (click)="logout()">Cerrar sesión</button>
+</header>
+
+<main class="container">
+  @if (loading()) {
+    <p class="muted" role="status">Cargando productos…</p>
+  } @else if (error(); as message) {
+    <p class="alert alert-error" role="alert">{{ message }}</p>
+  } @else {
+    <div class="card table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th scope="col">Nombre</th>
+            <th scope="col" class="num">Precio</th>
+            <th scope="col" class="num">Stock</th>
+            <th scope="col">Categoría</th>
+            <th scope="col"><span class="visually-hidden">Acciones</span></th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (product of products(); track product.id) {
+            <tr>
+              <td>{{ product.nombre }}</td>
+              <td class="num">{{ product.precio | number: '1.2-2' }}</td>
+              <td class="num">{{ product.stock }}</td>
+              <td>{{ product.categoriaNombre }}</td>
+              <td class="actions">
+                <a
+                  class="btn btn-primary btn-sm"
+                  [routerLink]="['/products', product.id, 'edit']"
+                  [attr.aria-label]="'Editar ' + product.nombre"
+                >
+                  Editar
+                </a>
+              </td>
+            </tr>
+          } @empty {
+            <tr>
+              <td colspan="5" class="muted">No hay productos registrados.</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</main>

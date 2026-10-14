@@ -1,6 +1,9 @@
+using System.Text;
 using CatalogoApi.Data;
+using CatalogoApi.Services;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Storage;
+using Microsoft.IdentityModel.Tokens;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -16,13 +19,46 @@ var connectionString =
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(connectionString));
 
+builder.Services.AddHttpClient();
+
+builder.Services.AddScoped<CatalogImportService>();
+
+// Configuración de JWT
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+.AddJwtBearer(options =>
+{
+    options.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateIssuer = false,          
+        ValidateAudience = false,        
+        ValidateLifetime = true,        
+        ValidateIssuerSigningKey = true, 
+        IssuerSigningKey = new SymmetricSecurityKey(
+            Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]!)
+        )
+    };
+});
+
 var app = builder.Build();
 
 using (var scope = app.Services.CreateScope())
 {
-    var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+    var services = scope.ServiceProvider;
+
+    var db = services.GetRequiredService<ApplicationDbContext>();
     await db.Database.MigrateAsync();
     await DbSeeder.SeedAsync(db, app.Configuration);
+
+    try
+    {
+        var importService = services.GetRequiredService<CatalogImportService>();
+        await importService.ImportCatalogAsync();
+    }
+    catch (Exception ex)
+    {
+        var logger = services.GetRequiredService<ILogger<Program>>();
+        logger.LogError(ex, "Error al procesar la importación del catálogo.");
+    }
 }
 
 if (app.Environment.IsDevelopment())
@@ -31,6 +67,8 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+app.UseAuthentication();
 
 app.UseAuthorization();
 

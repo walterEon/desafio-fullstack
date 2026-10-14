@@ -8,7 +8,7 @@ namespace CatalogoApi.Models
         public string Nombre { get; set; } = string.Empty;
         public string Descripcion { get; set; } = string.Empty;
         public decimal Precio { get; set; }
-        public int Stock { get; set;}
+        public int Stock { get; set;} = 0;
         public string ImagenUrl {get; set;} = string.Empty;
         public Categoria Categoria { get; set; } = null!;
     }

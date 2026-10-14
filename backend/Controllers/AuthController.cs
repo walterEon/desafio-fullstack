@@ -4,6 +4,7 @@ using System.Text;
 using CatalogoApi.Data;
 using CatalogoApi.DTOs;
 using CatalogoApi.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;

@@ -1,0 +1,34 @@
+services:
+  db:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_SA_PASSWORD: ${SA_PASSWORD}
+    healthcheck:
+      test: /opt/mssql-tools18/bin/sqlcmd -C -S localhost -U sa -P "$$MSSQL_SA_PASSWORD" -Q "SELECT 1" || exit 1
+      interval: 10s
+      retries: 10
+      start_period: 20s
+    volumes:
+      - sqldata:/var/opt/mssql
+
+  backend:
+    build: ./backend
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      ConnectionStrings__DefaultConnection: Server=db;Database=Catalogo;User Id=sa;Password=${SA_PASSWORD};TrustServerCertificate=True
+      Jwt__Key: ${JWT_KEY}
+      Seed__Email: ${SEED_EMAIL}
+      Seed__Password: ${SEED_PASSWORD}
+
+  frontend:
+    build: ./frontend
+    depends_on:
+      - backend
+    ports:
+      - "4200:80"
+
+volumes:
+  sqldata:
